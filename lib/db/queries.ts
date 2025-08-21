@@ -128,3 +128,49 @@ export async function getTeamForUser() {
 
   return result?.team || null;
 }
+
+export async function findOrCreateUserByEmail(email: string, name?: string) {
+  // First, try to find existing user
+  const existingUser = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.email, email), isNull(users.deletedAt)))
+    .limit(1);
+
+  if (existingUser.length > 0) {
+    return existingUser[0];
+  }
+
+  // Create new user if not found
+  const newUser = await db
+    .insert(users)
+    .values({
+      email,
+      name: name || email.split('@')[0], // Use email prefix as default name
+      passwordHash: '', // No password for report-only users
+      role: 'member',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    })
+    .returning();
+
+  // Create a default team for the user
+  const newTeam = await db
+    .insert(teams)
+    .values({
+      name: `${name || email.split('@')[0]}'s Reports`,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    })
+    .returning();
+
+  // Add user to their team
+  await db.insert(teamMembers).values({
+    userId: newUser[0].id,
+    teamId: newTeam[0].id,
+    role: 'owner',
+    joinedAt: new Date()
+  });
+
+  return newUser[0];
+}

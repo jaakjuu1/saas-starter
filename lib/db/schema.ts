@@ -139,4 +139,95 @@ export enum ActivityType {
   REMOVE_TEAM_MEMBER = 'REMOVE_TEAM_MEMBER',
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
+  GENERATE_REPORT = 'GENERATE_REPORT',
+  DOWNLOAD_REPORT = 'DOWNLOAD_REPORT',
+  SUBSCRIBE_DASHBOARD = 'SUBSCRIBE_DASHBOARD',
 }
+
+// Reports and Jobs schema
+export const reports = pgTable('reports', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  teamId: integer('team_id').references(() => teams.id),
+  domain: varchar('domain', { length: 255 }).notNull(),
+  reportType: varchar('report_type', { length: 50 }).notNull(), // 'lite', 'pro', 'elite', 'tasklist_pro'
+  status: varchar('status', { length: 50 }).notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed'
+  ga4PropertyId: varchar('ga4_property_id', { length: 100 }),
+  reportData: text('report_data'), // JSON data
+  pdfUrl: text('pdf_url'),
+  stripePaymentId: text('stripe_payment_id'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  completedAt: timestamp('completed_at'),
+});
+
+export const reportJobs = pgTable('report_jobs', {
+  id: serial('id').primaryKey(),
+  reportId: integer('report_id')
+    .notNull()
+    .references(() => reports.id),
+  jobId: text('job_id').notNull().unique(), // Queue job ID
+  status: varchar('status', { length: 50 }).notNull().default('queued'), // 'queued', 'active', 'completed', 'failed'
+  progress: integer('progress').default(0), // 0-100
+  errorMessage: text('error_message'),
+  startedAt: timestamp('started_at'),
+  completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const dashboardSubscriptions = pgTable('dashboard_subscriptions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  teamId: integer('team_id').references(() => teams.id),
+  domain: varchar('domain', { length: 255 }).notNull(),
+  ga4PropertyId: varchar('ga4_property_id', { length: 100 }),
+  stripeSubscriptionId: text('stripe_subscription_id').unique(),
+  status: varchar('status', { length: 50 }).notNull().default('active'), // 'active', 'cancelled', 'past_due'
+  planType: varchar('plan_type', { length: 50 }).notNull(), // 'basic', 'pro'
+  lastDataRefresh: timestamp('last_data_refresh'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Relations
+export const reportsRelations = relations(reports, ({ one, many }) => ({
+  user: one(users, {
+    fields: [reports.userId],
+    references: [users.id],
+  }),
+  team: one(teams, {
+    fields: [reports.teamId],
+    references: [teams.id],
+  }),
+  reportJobs: many(reportJobs),
+}));
+
+export const reportJobsRelations = relations(reportJobs, ({ one }) => ({
+  report: one(reports, {
+    fields: [reportJobs.reportId],
+    references: [reports.id],
+  }),
+}));
+
+export const dashboardSubscriptionsRelations = relations(dashboardSubscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [dashboardSubscriptions.userId],
+    references: [users.id],
+  }),
+  team: one(teams, {
+    fields: [dashboardSubscriptions.teamId],
+    references: [teams.id],
+  }),
+}));
+
+// Type exports
+export type Report = typeof reports.$inferSelect;
+export type NewReport = typeof reports.$inferInsert;
+export type ReportJob = typeof reportJobs.$inferSelect;
+export type NewReportJob = typeof reportJobs.$inferInsert;
+export type DashboardSubscription = typeof dashboardSubscriptions.$inferSelect;
+export type NewDashboardSubscription = typeof dashboardSubscriptions.$inferInsert;

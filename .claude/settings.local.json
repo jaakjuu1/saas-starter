@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__archon__health_check",
+      "mcp__archon__manage_project",
+      "mcp__archon__get_available_sources",
+      "mcp__archon__perform_rag_query",
+      "mcp__archon__search_code_examples",
+      "mcp__archon__manage_document",
+      "mcp__archon__manage_task",
+      "Bash(docker run:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
