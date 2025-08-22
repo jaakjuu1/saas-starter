@@ -88,7 +88,11 @@ export default function ReportStatusPage() {
     
     // Poll for updates every 3 seconds if report is still processing
     const interval = setInterval(() => {
-      if (status && status.report.status !== 'completed' && status.report.status !== 'failed') {
+      if (status && 
+          status.report.status !== 'completed' && 
+          status.report.status !== 'failed' &&
+          !status.queue?.failedReason && // Stop polling if job failed in queue
+          status.job?.status !== 'failed') { // Stop polling if job failed
         fetchStatus();
       }
     }, 3000);
@@ -128,8 +132,8 @@ export default function ReportStatusPage() {
   
   const progress = job?.progress || 0;
   const isCompleted = report.status === 'completed';
-  const isFailed = report.status === 'failed';
-  const isProcessing = report.status === 'processing' || report.status === 'pending';
+  const isFailed = report.status === 'failed' || status.queue?.failedReason || job?.status === 'failed';
+  const isProcessing = (report.status === 'processing' || report.status === 'pending') && !isFailed;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -189,7 +193,7 @@ export default function ReportStatusPage() {
                 We encountered an issue generating your report.
               </p>
               <p className="text-sm text-gray-500 mb-6">
-                {job?.errorMessage || 'Please contact support for assistance.'}
+                {status.queue?.failedReason || job?.errorMessage || 'Please contact support for assistance.'}
               </p>
               <Button variant="outline" onClick={fetchStatus}>
                 <RefreshCw className="mr-2 h-4 w-4" />

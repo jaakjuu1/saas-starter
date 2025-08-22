@@ -82,11 +82,12 @@ export class McpServerManager extends EventEmitter {
       
       transport.on('close', (code, signal) => {
         console.log(`[ServerManager] Server ${config.name} closed (code: ${code}, signal: ${signal})`);
+        const wasRunning = instance.status === 'running';
         instance.status = 'stopped';
         this.emit('server-closed', config.name, code, signal);
         
-        // Auto-restart if unexpected closure
-        if (code !== 0 && instance.status === 'running') {
+        // Auto-restart if unexpected closure and was running
+        if (code !== 0 && wasRunning && instance.status !== 'stopping') {
           console.log(`[ServerManager] Attempting to restart ${config.name}...`);
           this.restartServer(config.name).catch(console.error);
         }

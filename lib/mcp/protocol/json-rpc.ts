@@ -174,7 +174,7 @@ export class JsonRpcProtocol {
    * Handle an incoming response
    */
   handleResponse(response: JsonRpcResponse): void {
-    const pending = this.pendingRequests.get(response.id);
+    const pending = this.pendingRequests.get(response.id!);
     if (!pending) {
       console.warn(`No pending request for response id: ${response.id}`);
       return;
@@ -186,7 +186,7 @@ export class JsonRpcProtocol {
     }
 
     // Remove from pending
-    this.pendingRequests.delete(response.id);
+    this.pendingRequests.delete(response.id!);
 
     // Resolve or reject based on response
     if (response.error) {

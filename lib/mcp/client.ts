@@ -403,7 +403,7 @@ export class MCPClient {
       if (!agentConfig) continue;
 
       try {
-        const prompt = agentConfig.prompts[context.reportTier as keyof typeof agentConfig.prompts];
+        const prompt = (agentConfig as any).prompts[context.reportTier];
         if (!prompt) continue;
 
         const agentQuery = `

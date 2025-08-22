@@ -8,7 +8,16 @@
       "mcp__archon__search_code_examples",
       "mcp__archon__manage_document",
       "mcp__archon__manage_task",
-      "Bash(docker run:*)"
+      "Bash(docker run:*)",
+      "Bash(npm run worker:*)",
+      "mcp__archon__list_tasks",
+      "Bash(node:*)",
+      "mcp__archon__create_task",
+      "mcp__archon__list_projects",
+      "WebFetch(domain:github.com)",
+      "Bash(npm install:*)",
+      "Bash(npm search:*)",
+      "Bash(where npx)"
     ],
     "deny": [],
     "ask": []

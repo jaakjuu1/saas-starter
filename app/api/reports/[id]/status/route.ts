@@ -7,10 +7,11 @@ import { getReportJobStatus } from '@/lib/queue/report-queue';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const reportId = parseInt(params.id);
+    const { id } = await params;
+    const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return NextResponse.json(
         { error: 'Invalid report ID' },

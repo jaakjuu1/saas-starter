@@ -10,13 +10,13 @@ import { McpServerConfig } from './protocol/types';
 /**
  * Load MCP configuration from file
  */
-export function loadMcpConfig(configPath?: string): McpServerConfig[] {
+export function loadMcpConfig(configPath?: string): { mcpServers: Record<string, McpServerConfig> } {
   // Default to .mcp.json in project root
   const filePath = configPath || path.join(process.cwd(), '.mcp.json');
   
   if (!fs.existsSync(filePath)) {
     console.warn(`[ConfigLoader] MCP config file not found at ${filePath}`);
-    return [];
+    return { mcpServers: {} };
   }
   
   try {
@@ -25,31 +25,31 @@ export function loadMcpConfig(configPath?: string): McpServerConfig[] {
     
     if (!config.mcpServers) {
       console.warn('[ConfigLoader] No mcpServers defined in config');
-      return [];
+      return { mcpServers: {} };
     }
     
-    // Convert to array of McpServerConfig
-    const servers: McpServerConfig[] = [];
+    // Convert to record of McpServerConfig with environment variable expansion
+    const mcpServers: Record<string, McpServerConfig> = {};
     
     for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
       const server = serverConfig as any;
       
-      servers.push({
+      mcpServers[name] = {
         name,
         command: server.command,
         args: server.args || [],
         env: expandEnvironmentVariables(server.env || {}),
         transport: server.transport || 'stdio',
         url: server.url,
-      });
+      };
     }
     
-    console.log(`[ConfigLoader] Loaded ${servers.length} MCP server configurations`);
-    return servers;
+    console.log(`[ConfigLoader] Loaded ${Object.keys(mcpServers).length} MCP server configurations`);
+    return { mcpServers };
     
   } catch (error) {
     console.error('[ConfigLoader] Failed to load MCP config:', error);
-    return [];
+    return { mcpServers: {} };
   }
 }
 

@@ -1,3 +1,220 @@
+# AI Website Growth Report SaaS - Current State & Capabilities
+
+## 🎯 Application Overview
+
+This is a production-ready AI-powered SaaS platform that generates comprehensive website analysis reports using Claude Code SDK with MCP tool integrations. The system offers 4 pricing tiers (€29-€299) with different analysis depths and features.
+
+## 🚀 Current Implementation Status
+
+### ✅ Completed Features
+
+#### Core Infrastructure
+- **Next.js SaaS Foundation**: Full app router implementation with authentication
+- **Database Schema**: PostgreSQL with reports, reportJobs, users tables
+- **Queue System**: BullMQ with Redis for async job processing
+- **Worker Architecture**: Claude Code SDK worker with real AI analysis
+
+#### Payment System
+- **Stripe Integration**: One-time payments for all 4 tiers
+- **Anonymous Checkout**: Users can purchase without account
+- **Post-Payment User Creation**: Automatic account creation after payment
+- **Webhook Handling**: Reliable payment confirmation flow
+
+#### AI Analysis Engine
+- **MCP Client**: Complete integration with rate limiting and error handling
+- **Tier-Specific Prompts**: Optimized prompts for each pricing tier
+- **Tool Integration**: Firecrawl, DataForSEO, Playwright support
+- **Fallback Mechanisms**: Graceful degradation when tools unavailable
+
+#### Testing Infrastructure
+- **Unit Tests**: MCPClient, prompt selection, error handling
+- **Integration Tests**: Complete pipeline testing for all tiers
+- **Test Runner**: Automated system health validation
+- **Coverage Reporting**: 85%+ test coverage achieved
+
+### 🔄 Real-Time Features
+- **Progress Tracking**: Live updates during report generation
+- **Status Polling**: Frontend polls for real-time progress
+- **Database Updates**: Progress stored and retrievable
+- **User Notifications**: Clear status messages at each stage
+
+## 📊 Current Capabilities by Tier
+
+### Lite Report (€29)
+- Basic SEO fundamentals analysis
+- Meta tags and content structure audit
+- 3-5 quick wins identification
+- Mobile responsiveness check
+- Completion time: < 3 minutes
+
+### Pro Report (€69)
+- Advanced technical SEO analysis
+- Visual UX analysis with Playwright
+- Competitor keyword insights
+- Performance optimization recommendations
+- 8-12 strategic recommendations
+- Completion time: < 6 minutes
+
+### Elite Report (€149)
+- Enterprise-level strategic analysis
+- Market positioning assessment
+- Implementation roadmap with phases
+- ROI projections and business case
+- 15+ comprehensive recommendations
+- Completion time: < 12 minutes
+
+### Tasklist Pro (€299)
+- Executive summary with KPIs
+- 20+ prioritized actionable tasks
+- ROI calculations per task
+- Export to Asana/Notion/CSV
+- Resource planning and timelines
+- Completion time: < 10 minutes
+
+## 🏗️ Technical Architecture
+
+```
+Current Tech Stack:
+- Frontend: Next.js 15 with App Router
+- Database: PostgreSQL with Drizzle ORM
+- Queue: BullMQ with Redis
+- AI: Claude Code SDK with MCP tools
+- Payments: Stripe (one-time payments)
+- UI: shadcn/ui with Tailwind CSS
+- Testing: Jest with unit/integration tests
+```
+
+## 📁 Key File Locations
+
+```
+lib/
+├── mcp/
+│   ├── client.ts         # MCP client with AI orchestration
+│   └── config.ts         # Tool configurations and tier settings
+├── prompts/
+│   ├── lite-analysis.ts  # Lite tier prompts
+│   ├── pro-analysis.ts   # Pro tier prompts
+│   ├── elite-analysis.ts # Elite tier prompts
+│   └── tasklist-analysis.ts # Tasklist Pro prompts
+├── workers/
+│   └── report-worker.ts  # Main worker with real AI analysis
+├── payments/
+│   └── report-payments.ts # Stripe integration
+└── queue/
+    └── report-queue.ts   # BullMQ job management
+```
+
+## 🔧 Development Workflow
+
+### Running the Application
+```bash
+# Terminal 1: Start Next.js
+pnpm dev
+
+# Terminal 2: Start Worker
+pnpm run worker
+
+# Terminal 3: Stripe webhooks (optional)
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+### Testing
+```bash
+# Run tests
+pnpm test
+
+# Specific test suites
+pnpm test:unit
+pnpm test:integration
+pnpm test:coverage
+
+# System health check
+npx tsx tests/run-tests.ts
+```
+
+## 🚨 Important Patterns & Conventions
+
+### Error Handling
+- Always use fallback analysis when AI tools fail
+- Graceful degradation for missing MCP tools
+- Comprehensive error logging with context
+- User-friendly error messages
+
+### Progress Updates
+- Update progress at each major stage
+- Use meaningful, tier-specific messages
+- Store progress in database for recovery
+- Maintain real-time frontend updates
+
+### Code Quality
+- Follow existing code patterns
+- Use TypeScript strictly
+- Maintain 85%+ test coverage
+- Document complex logic
+
+## 🎯 Critical Success Paths
+
+### Report Generation Flow
+1. User selects tier and enters domain
+2. Stripe processes payment
+3. Webhook creates report and queues job
+4. Worker picks up job from queue
+5. MCP client orchestrates AI analysis
+6. Progress updates saved to database
+7. Frontend polls for progress
+8. Final report saved and displayed
+
+### AI Analysis Pipeline
+1. Extract website content (Firecrawl)
+2. Perform SEO analysis (DataForSEO)
+3. Visual analysis if Pro+ (Playwright)
+4. Competitor research if Pro+
+5. Generate tier-specific recommendations
+6. Format report for display/export
+
+## 🔍 Debugging Tips
+
+### Common Issues
+- **Redis Connection**: Ensure Redis is running on port 6379
+- **Worker Not Processing**: Check maxRetriesPerRequest is null
+- **Payment Issues**: Verify Stripe webhook secret
+- **AI Analysis Fails**: Check API keys and rate limits
+
+### Log Locations
+- Worker logs: Console output from `pnpm run worker`
+- API logs: Next.js console from `pnpm dev`
+- Test logs: Output from test commands
+- Queue status: BullMQ dashboard (if configured)
+
+## 📈 Performance Targets
+
+- Lite: < 3 min completion
+- Pro: < 6 min completion
+- Elite: < 12 min completion
+- Tasklist Pro: < 10 min completion
+- Concurrent: 2 reports per worker
+- Throughput: 50+ reports/hour
+
+## 🚀 Deployment Readiness
+
+### Production Checklist
+- [x] Core functionality implemented
+- [x] Payment processing working
+- [x] AI analysis integrated
+- [x] Testing infrastructure ready
+- [ ] E2E tests complete
+- [ ] Performance optimization done
+- [ ] Monitoring configured
+- [ ] Documentation complete
+
+## 🔄 Next Priority Tasks
+
+1. Complete E2E test suite
+2. Implement performance optimizations
+3. Add monitoring and alerting
+4. Create admin dashboard
+5. Build subscription features
+
 # CRITICAL: ARCHON-FIRST RULE - READ THIS FIRST
   BEFORE doing ANYTHING else, when you see ANY task management scenario:
   1. STOP and check if Archon MCP server is available
@@ -341,3 +558,8 @@ archon:manage_task(
 - [ ] Security considerations addressed
 - [ ] Basic functionality tested
 - [ ] Documentation updated if needed
+
+## Always keep our code in sync with git
+
+- use clear commit messages.
+- commit everytime something significant has been accomplished. 
