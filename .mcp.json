@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "firecrawl": {
+      "command": "npx",
+      "args": ["firecrawl-mcp"],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}",
+        "FIRECRAWL_ENABLE_RETRIES": "true",
+        "FIRECRAWL_MAX_RETRIES": "3"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "env": {}
+    },
+    "dataforseo": {
+      "command": "npx",
+      "args": ["dataforseo-mcp-server"],
+      "env": {
+        "DATAFORSEO_LOGIN": "${DATAFORSEO_LOGIN}",
+        "DATAFORSEO_PASSWORD": "${DATAFORSEO_PASSWORD}"
+      }
+    }
+  }
+}
