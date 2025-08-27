@@ -82,10 +82,34 @@ export default function GenerateReportPage() {
   const [ga4PropertyId, setGa4PropertyId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Helper function to clean and normalize domain input
+  const cleanDomain = (input: string): string => {
+    let cleaned = input.trim();
+    
+    // Remove common protocols
+    cleaned = cleaned.replace(/^(https?:\/\/)?(www\.)?/, '');
+    
+    // Remove trailing slash and path
+    cleaned = cleaned.split('/')[0];
+    
+    // Remove any query parameters or hash
+    cleaned = cleaned.split('?')[0].split('#')[0];
+    
+    return cleaned;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!domain || !email) return;
+
+    const cleanedDomain = cleanDomain(domain);
+    
+    // Basic domain validation
+    if (!cleanedDomain || !cleanedDomain.includes('.')) {
+      alert('Please enter a valid domain name');
+      return;
+    }
 
     setIsLoading(true);
 
@@ -98,7 +122,7 @@ export default function GenerateReportPage() {
         },
         body: JSON.stringify({
           reportTier: selectedTier,
-          domain: domain.replace(/^https?:\/\//, '').replace(/\/$/, ''),
+          domain: cleanedDomain,
           ga4PropertyId: ga4PropertyId || undefined,
           customerEmail: email
         }),
@@ -209,15 +233,15 @@ export default function GenerateReportPage() {
                   <Label htmlFor="domain">Website Domain *</Label>
                   <Input
                     id="domain"
-                    type="url"
-                    placeholder="example.com"
+                    type="text"
+                    placeholder="example.com or https://example.com"
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
                     required
                     className="mt-1"
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Enter your website domain without https://
+                    Enter your website URL in any format - we'll clean it up
                   </p>
                 </div>
 

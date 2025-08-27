@@ -17,7 +17,16 @@
       "WebFetch(domain:github.com)",
       "Bash(npm install:*)",
       "Bash(npm search:*)",
-      "Bash(where npx)"
+      "Bash(where npx)",
+      "Bash(timeout 120 npx tsx test-real-analysis.js)",
+      "Bash(timeout 120 npx tsx test-worker-integration.js)",
+      "Bash(timeout 360 npx tsx test-worker-lite.js)",
+      "Bash(timeout 300 npx tsx test-tier-summary.js)",
+      "mcp__archon__get_task",
+      "WebSearch",
+      "Bash(pnpm add:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

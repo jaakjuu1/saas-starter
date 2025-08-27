@@ -1,0 +1,39 @@
+# Docker Compose Override for Local Development
+# This file is automatically loaded by docker-compose and overrides settings in docker-compose.yml
+# Perfect for local development without modifying the main configuration
+
+version: '3.8'
+
+services:
+  # Override web service for local development
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      # Override to use host networking for local services
+      - POSTGRES_URL=postgresql://postgres:postgres@host.docker.internal:5432/saas_seo_ai
+      - REDIS_URL=redis://host.docker.internal:6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Override worker for local development
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      # Override to use host networking for local services
+      - POSTGRES_URL=postgresql://postgres:postgres@host.docker.internal:5432/saas_seo_ai
+      - REDIS_URL=redis://host.docker.internal:6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

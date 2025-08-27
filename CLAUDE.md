@@ -563,3 +563,33 @@ archon:manage_task(
 
 - use clear commit messages.
 - commit everytime something significant has been accomplished. 
+
+# Essentials 
+
+- Our report generation actually involves multiple parallel and 
+  conditional paths:
+
+  1. Parallel Operations:
+    - Crawling website content
+    - Fetching SEO metrics
+    - Taking screenshots
+    - Analyzing competitors
+  These can and should run simultaneously, not linearly.
+  2. Conditional Flows:
+    - Pro tier: adds visual analysis
+    - Elite tier: adds market positioning
+    - Different tools activate based on tier and data availability
+  3. Retry/Fallback Logic:
+    - If Firecrawl fails → try alternative scraping
+    - If DataForSEO fails → use basic analysis
+    - Multiple decision branches based on tool availability
+
+  This is actually a graph-based workflow where:
+  - Nodes = analysis tasks
+  - Edges = dependencies and conditions
+  - Parallel execution paths
+  - Dynamic routing based on tier/results
+
+  So LangGraph might actually be MORE appropriate than I initially stated, since it's
+  designed exactly for these DAG (Directed Acyclic Graph) workflows with conditional
+  branching and parallel execution.

@@ -5,8 +5,9 @@ import { getUser, getTeamForUser } from '@/lib/db/queries';
 import { SWRConfig } from 'swr';
 
 export const metadata: Metadata = {
-  title: 'Next.js SaaS Starter',
-  description: 'Get started quickly with Next.js, Postgres, and Stripe.'
+  title: 'Website Growth Report SaaS',
+  description:
+    'Generate comprehensive AI-powered website analysis reports with Claude Code SDK, MCP tool integrations, and actionable growth recommendations. Supports 4 pricing tiers with advanced SEO, UX, and business insights.'
 };
 
 export const viewport: Viewport = {

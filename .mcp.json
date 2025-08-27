@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "firecrawl": {
-      "command": "npx",
-      "args": ["firecrawl-mcp"],
+      "command": "node",
+      "args": ["node_modules/firecrawl-mcp/dist/index.js"],
       "env": {
         "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}",
         "FIRECRAWL_ENABLE_RETRIES": "true",
@@ -10,13 +10,13 @@
       }
     },
     "playwright": {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest"],
+      "command": "node",
+      "args": ["node_modules/@playwright/mcp/cli.js"],
       "env": {}
     },
     "dataforseo": {
-      "command": "npx",
-      "args": ["dataforseo-mcp-server"],
+      "command": "node", 
+      "args": ["node_modules/dataforseo-mcp-server/build/main/main/index.js"],
       "env": {
         "DATAFORSEO_LOGIN": "${DATAFORSEO_LOGIN}",
         "DATAFORSEO_PASSWORD": "${DATAFORSEO_PASSWORD}"

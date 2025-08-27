@@ -280,6 +280,10 @@ export const reportWorker = new Worker<ReportJobData>(
       max: 10,
       duration: 60 * 1000, // Max 10 jobs per minute
     },
+    // Critical: Increase stall timeout for long-running AI analysis
+    stalledInterval: 30000, // Check for stalled jobs every 30 seconds
+    lockDuration: 600000, // Lock job for 10 minutes (enough for Elite reports)
+    lockRenewTime: 30000, // Renew lock every 30 seconds to prevent stalling
   }
 );
 

@@ -36,6 +36,8 @@ export const reportQueue = new Queue<ReportJobData>('report-generation', {
       type: 'exponential',
       delay: 2000,
     },
+    // Prevent premature stalling for long-running AI analysis
+    stalledInterval: 600000, // 10 minutes - enough for Elite reports
   },
 });
 

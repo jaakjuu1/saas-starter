@@ -1,16 +1,123 @@
+version: '3.8'
 
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:16.4-alpine
-    container_name: next_saas_starter_postgres
+    container_name: saas_seo_postgres
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_DB: saas_seo_ai
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "54322:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas_network
+
+  # Redis for BullMQ Job Queue
+  redis:
+    image: redis:7-alpine
+    container_name: saas_seo_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas_network
+
+  # Next.js Application (Development)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: saas_seo_web
+    environment:
+      - NODE_ENV=development
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/saas_seo_ai
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SECRET=${AUTH_SECRET}
+      - BASE_URL=http://localhost:3000
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATAFOR_SEO_LOGIN=${DATAFOR_SEO_LOGIN}
+      - DATAFOR_SEO_PASSWORD=${DATAFOR_SEO_PASSWORD}
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - saas_network
+    command: pnpm dev
+
+  # Report Worker Process
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: saas_seo_worker
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/saas_seo_ai
+      - REDIS_URL=redis://redis:6379
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATAFOR_SEO_LOGIN=${DATAFOR_SEO_LOGIN}
+      - DATAFOR_SEO_PASSWORD=${DATAFOR_SEO_PASSWORD}
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - saas_network
+    command: pnpm run worker
+
+  # BullMQ Dashboard (Optional - for monitoring)
+  bull-board:
+    image: deadly0/bull-board
+    container_name: saas_seo_bull_board
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+    ports:
+      - "3001:3000"
+    depends_on:
+      - redis
+    networks:
+      - saas_network
+
+networks:
+  saas_network:
+    driver: bridge
 
 volumes:
   postgres_data:
+  redis_data:
