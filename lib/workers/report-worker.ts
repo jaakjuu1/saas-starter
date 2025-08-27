@@ -4,6 +4,7 @@ import { reports, reportJobs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { ReportJobData, ReportJobProgress } from '@/lib/queue/report-queue';
 import { AnalysisEngine, AnalysisRequest, EnhancedAnalysisResult } from '@/lib/mcp/analysis-engine';
+import { processReportWithLangGraph } from './langgraph-worker';
 import Redis from 'ioredis';
 
 const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
@@ -94,8 +95,60 @@ async function generateFallbackAnalysis(domain: string, reportTier: string, job:
   };
 }
 
+/**
+ * Feature flag configuration for LangGraph rollout
+ */
+function shouldUseLangGraph(domain: string, reportTier: string, reportId: number): boolean {
+  // Check environment variable for global LangGraph enablement
+  const langGraphEnabled = process.env.LANGGRAPH_ENABLED === 'true';
+  if (!langGraphEnabled) {
+    return false;
+  }
+  
+  // Check for tier-specific rollout flags
+  const langGraphTiers = process.env.LANGGRAPH_TIERS?.split(',') || [];
+  if (langGraphTiers.length > 0 && !langGraphTiers.includes(reportTier)) {
+    return false;
+  }
+  
+  // Check for percentage-based rollout
+  const rolloutPercentage = parseInt(process.env.LANGGRAPH_ROLLOUT_PERCENTAGE || '0');
+  if (rolloutPercentage > 0) {
+    // Use reportId for consistent routing (same report always goes to same system)
+    const hash = reportId % 100;
+    if (hash >= rolloutPercentage) {
+      return false;
+    }
+  }
+  
+  // Check for user-level overrides (if implemented)
+  // This could check a database table or Redis cache for specific overrides
+  
+  return true;
+}
+
 // Universal report processing function for all tiers using real MCP analysis
 async function processReport(job: Job<ReportJobData>): Promise<any> {
+  const { domain, reportTier, reportId } = job.data;
+
+  // Feature flag routing: LangGraph vs Legacy
+  if (shouldUseLangGraph(domain, reportTier, reportId)) {
+    console.log(`[Worker] Using LangGraph for ${domain} (${reportTier}) - Report ${reportId}`);
+    try {
+      return await processReportWithLangGraph(job);
+    } catch (error) {
+      console.error(`[Worker] LangGraph failed for ${domain}, falling back to legacy:`, error);
+      // Fallback to legacy processing if LangGraph fails
+      return await processReportLegacy(job);
+    }
+  } else {
+    console.log(`[Worker] Using legacy processing for ${domain} (${reportTier}) - Report ${reportId}`);
+    return await processReportLegacy(job);
+  }
+}
+
+// Legacy report processing function (renamed from processReport)
+async function processReportLegacy(job: Job<ReportJobData>): Promise<any> {
   const { domain, reportTier, reportId } = job.data;
   
   // Get Anthropic API key from environment

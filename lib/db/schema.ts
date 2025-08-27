@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   integer,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -156,6 +157,7 @@ export const reports = pgTable('reports', {
   status: varchar('status', { length: 50 }).notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed'
   ga4PropertyId: varchar('ga4_property_id', { length: 100 }),
   reportData: text('report_data'), // JSON data
+  error: text('error'), // Error message if generation failed
   pdfUrl: text('pdf_url'),
   stripePaymentId: text('stripe_payment_id'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -171,9 +173,14 @@ export const reportJobs = pgTable('report_jobs', {
   jobId: text('job_id').notNull().unique(), // Queue job ID
   status: varchar('status', { length: 50 }).notNull().default('queued'), // 'queued', 'active', 'completed', 'failed'
   progress: integer('progress').default(0), // 0-100
+  progressMessage: text('progress_message'), // Current progress description
+  currentStage: varchar('current_stage', { length: 50 }), // Current execution stage
+  executionEngine: varchar('execution_engine', { length: 20 }).default('legacy'), // 'legacy', 'langgraph'
+  checkpointId: text('checkpoint_id'), // LangGraph checkpoint identifier
   errorMessage: text('error_message'),
   startedAt: timestamp('started_at'),
   completedAt: timestamp('completed_at'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
@@ -191,6 +198,17 @@ export const dashboardSubscriptions = pgTable('dashboard_subscriptions', {
   lastDataRefresh: timestamp('last_data_refresh'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// LangGraph checkpoint storage
+export const langGraphCheckpoints = pgTable('langgraph_checkpoints', {
+  id: serial('id').primaryKey(),
+  threadId: varchar('thread_id', { length: 255 }).notNull(),
+  checkpointId: varchar('checkpoint_id', { length: 255 }).notNull(),
+  parentCheckpointId: varchar('parent_checkpoint_id', { length: 255 }),
+  checkpointData: jsonb('checkpoint_data').notNull(),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 // Relations

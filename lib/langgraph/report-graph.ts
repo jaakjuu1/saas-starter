@@ -19,6 +19,7 @@ import {
   performCompetitiveAnalysis 
 } from './nodes/analysis';
 import { compileReport } from './nodes/compile';
+import { createPostgreSQLCheckpointSaver } from './checkpoints';
 
 /**
  * Determine which node to execute next based on tier and progress
@@ -264,13 +265,27 @@ export function initializeReportState(
 }
 
 /**
- * Compile the graph for execution
+ * Compile the graph for execution with optional checkpoint saver
  */
-export function compileReportGraph() {
+export function compileReportGraph(options?: {
+  useCheckpointing?: boolean;
+  checkpointSaver?: any;
+}) {
   console.log('[compileReportGraph] Compiling StateGraph for execution');
   const graph = createReportGraph();
-  const compiledGraph = graph.compile();
-  console.log('[compileReportGraph] Graph compiled successfully');
+  
+  let compiledGraph;
+  
+  if (options?.useCheckpointing !== false) {
+    // Use PostgreSQL checkpointing by default
+    const checkpointSaver = options?.checkpointSaver || createPostgreSQLCheckpointSaver();
+    compiledGraph = graph.compile({ checkpointSaver });
+    console.log('[compileReportGraph] Graph compiled with PostgreSQL checkpointing');
+  } else {
+    compiledGraph = graph.compile();
+    console.log('[compileReportGraph] Graph compiled without checkpointing');
+  }
+  
   return compiledGraph;
 }
 
@@ -284,11 +299,15 @@ export async function executeReportGeneration(
   options?: {
     checkpointSaver?: any;
     configurable?: Record<string, any>;
+    useCheckpointing?: boolean;
   }
 ): Promise<ReportState> {
   console.log(`[executeReportGeneration] Starting report generation for ${domain} (${tier})`);
   
-  const compiledGraph = compileReportGraph();
+  const compiledGraph = compileReportGraph({
+    useCheckpointing: options?.useCheckpointing,
+    checkpointSaver: options?.checkpointSaver
+  });
   const initialState = initializeReportState(domain, tier, reportId);
   
   try {
@@ -361,11 +380,15 @@ export async function* streamReportGeneration(
   options?: {
     checkpointSaver?: any;
     configurable?: Record<string, any>;
+    useCheckpointing?: boolean;
   }
 ): AsyncGenerator<ReportState, ReportState, unknown> {
   console.log(`[streamReportGeneration] Starting streaming report generation for ${domain} (${tier})`);
   
-  const compiledGraph = compileReportGraph();
+  const compiledGraph = compileReportGraph({
+    useCheckpointing: options?.useCheckpointing,
+    checkpointSaver: options?.checkpointSaver
+  });
   const initialState = initializeReportState(domain, tier, reportId);
   
   const config = {
