@@ -16,7 +16,11 @@
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
     "test:e2e": "jest tests/e2e",
-    "test:ci": "jest --coverage --watchAll=false --passWithNoTests"
+    "test:ci": "jest --coverage --watchAll=false --passWithNoTests",
+    "setup:langgraph": "npx tsx scripts/setup-langgraph-dev.js",
+    "test:langgraph": "npx tsx scripts/test-langgraph.js",
+    "test:langgraph-nodes": "jest tests/langgraph/nodes.test.ts",
+    "test:langgraph-graph": "jest tests/langgraph/report-graph.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.83",

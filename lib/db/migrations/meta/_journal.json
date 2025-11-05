@@ -15,6 +15,13 @@
       "when": 1755436853477,
       "tag": "0001_breezy_jackal",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756328566280,
+      "tag": "0002_cheerful_nova",
+      "breakpoints": true
     }
   ]
 }

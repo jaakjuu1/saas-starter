@@ -78,7 +78,9 @@ Current Tech Stack:
 - Frontend: Next.js 15 with App Router
 - Database: PostgreSQL with Drizzle ORM
 - Queue: BullMQ with Redis
-- AI: Claude Code SDK with MCP tools
+- AI: Claude Code SDK with MCP tools + LangGraph
+- Graph Execution: LangGraph StateGraph with conditional routing
+- Persistence: PostgreSQL checkpointing for recovery
 - Payments: Stripe (one-time payments)
 - UI: shadcn/ui with Tailwind CSS
 - Testing: Jest with unit/integration tests
@@ -88,20 +90,41 @@ Current Tech Stack:
 
 ```
 lib/
+├── langgraph/                    # 🆕 LangGraph implementation
+│   ├── types.ts                 # Type definitions and tier configs
+│   ├── report-graph.ts          # Main StateGraph definition
+│   ├── checkpoints.ts           # PostgreSQL checkpoint persistence
+│   ├── error-recovery.ts        # Retry logic and recovery
+│   └── nodes/
+│       ├── data-collection.ts   # Website crawling and metrics
+│       ├── analysis.ts          # Technical/content/strategic analysis
+│       ├── competitors.ts       # Competitor research
+│       └── compile.ts           # Final report compilation
 ├── mcp/
-│   ├── client.ts         # MCP client with AI orchestration
-│   └── config.ts         # Tool configurations and tier settings
+│   ├── client.ts                # MCP client with AI orchestration
+│   └── config.ts                # Tool configurations and tier settings
 ├── prompts/
-│   ├── lite-analysis.ts  # Lite tier prompts
-│   ├── pro-analysis.ts   # Pro tier prompts
-│   ├── elite-analysis.ts # Elite tier prompts
-│   └── tasklist-analysis.ts # Tasklist Pro prompts
+│   ├── lite-analysis.ts         # Lite tier prompts
+│   ├── pro-analysis.ts          # Pro tier prompts
+│   ├── elite-analysis.ts        # Elite tier prompts
+│   └── tasklist-analysis.ts     # Tasklist Pro prompts
 ├── workers/
-│   └── report-worker.ts  # Main worker with real AI analysis
+│   ├── report-worker.ts         # Main worker with feature flag routing
+│   └── langgraph-worker.ts      # 🆕 LangGraph integration layer
 ├── payments/
-│   └── report-payments.ts # Stripe integration
+│   └── report-payments.ts       # Stripe integration
 └── queue/
-    └── report-queue.ts   # BullMQ job management
+    └── report-queue.ts          # BullMQ job management
+
+scripts/                         # 🆕 Development utilities
+├── setup-langgraph-dev.js      # Environment validation
+├── test-langgraph.js           # Comprehensive test suite
+├── setup-dev.bat               # Windows setup script
+└── README.md                   # Script documentation
+
+tests/langgraph/                 # 🆕 LangGraph test suites
+├── nodes.test.ts               # Unit tests for individual nodes
+└── report-graph.test.ts        # Integration tests for graph execution
 ```
 
 ## 🔧 Development Workflow
@@ -118,12 +141,30 @@ pnpm run worker
 stripe listen --forward-to localhost:3000/api/stripe/webhook
 ```
 
+### LangGraph Development Setup
+```bash
+# First-time setup (Windows)
+scripts\setup-dev.bat
+
+# Cross-platform setup
+pnpm setup:langgraph
+
+# Start database services only
+docker-compose up -d postgres redis
+```
+
 ### Testing
 ```bash
-# Run tests
+# Run all tests
 pnpm test
 
-# Specific test suites
+# LangGraph specific testing
+pnpm test:langgraph           # Complete LangGraph test suite
+pnpm test:langgraph-nodes     # Unit tests for nodes
+pnpm test:langgraph-graph     # Integration tests for graph execution
+pnpm setup:langgraph          # Environment validation
+
+# Legacy test suites
 pnpm test:unit
 pnpm test:integration
 pnpm test:coverage
