@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { ReportJobData, ReportJobProgress } from '@/lib/queue/report-queue';
 import { AnalysisEngine, AnalysisRequest, EnhancedAnalysisResult } from '@/lib/mcp/analysis-engine';
 import { processReportWithLangGraph } from './langgraph-worker';
+import { processReportWithMultiAgent } from './multi-agent-worker';
 import Redis from 'ioredis';
 
 const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
@@ -96,54 +97,69 @@ async function generateFallbackAnalysis(domain: string, reportTier: string, job:
 }
 
 /**
- * Feature flag configuration for LangGraph rollout
+ * Feature flag configuration for execution engine selection
  */
-function shouldUseLangGraph(domain: string, reportTier: string, reportId: number): boolean {
-  // Check environment variable for global LangGraph enablement
-  const langGraphEnabled = process.env.LANGGRAPH_ENABLED === 'true';
-  if (!langGraphEnabled) {
-    return false;
-  }
-  
-  // Check for tier-specific rollout flags
-  const langGraphTiers = process.env.LANGGRAPH_TIERS?.split(',') || [];
-  if (langGraphTiers.length > 0 && !langGraphTiers.includes(reportTier)) {
-    return false;
-  }
-  
-  // Check for percentage-based rollout
-  const rolloutPercentage = parseInt(process.env.LANGGRAPH_ROLLOUT_PERCENTAGE || '0');
-  if (rolloutPercentage > 0) {
-    // Use reportId for consistent routing (same report always goes to same system)
-    const hash = reportId % 100;
-    if (hash >= rolloutPercentage) {
-      return false;
+function getExecutionEngine(domain: string, reportTier: string, reportId: number): 'multi-agent' | 'langgraph' | 'legacy' {
+  // Priority 1: Check for Multi-Agent enablement (NEW DEFAULT)
+  const multiAgentEnabled = process.env.MULTI_AGENT_ENABLED === 'true';
+  if (multiAgentEnabled) {
+    // Check for tier-specific rollout
+    const multiAgentTiers = process.env.MULTI_AGENT_TIERS?.split(',') || [];
+    if (multiAgentTiers.length === 0 || multiAgentTiers.includes(reportTier)) {
+      console.log(`[Worker] Using MULTI-AGENT for ${domain} (${reportTier})`);
+      return 'multi-agent';
     }
   }
-  
-  // Check for user-level overrides (if implemented)
-  // This could check a database table or Redis cache for specific overrides
-  
-  return true;
+
+  // Priority 2: Check for LangGraph
+  const langGraphEnabled = process.env.LANGGRAPH_ENABLED === 'true';
+  if (langGraphEnabled) {
+    const langGraphTiers = process.env.LANGGRAPH_TIERS?.split(',') || [];
+    if (langGraphTiers.length === 0 || langGraphTiers.includes(reportTier)) {
+      const rolloutPercentage = parseInt(process.env.LANGGRAPH_ROLLOUT_PERCENTAGE || '100');
+      const hash = reportId % 100;
+      if (hash < rolloutPercentage) {
+        console.log(`[Worker] Using LANGGRAPH for ${domain} (${reportTier})`);
+        return 'langgraph';
+      }
+    }
+  }
+
+  // Priority 3: Default to legacy
+  console.log(`[Worker] Using LEGACY for ${domain} (${reportTier})`);
+  return 'legacy';
 }
 
-// Universal report processing function for all tiers using real MCP analysis
+// Universal report processing function for all tiers
 async function processReport(job: Job<ReportJobData>): Promise<any> {
   const { domain, reportTier, reportId } = job.data;
 
-  // Feature flag routing: LangGraph vs Legacy
-  if (shouldUseLangGraph(domain, reportTier, reportId)) {
-    console.log(`[Worker] Using LangGraph for ${domain} (${reportTier}) - Report ${reportId}`);
-    try {
-      return await processReportWithLangGraph(job);
-    } catch (error) {
-      console.error(`[Worker] LangGraph failed for ${domain}, falling back to legacy:`, error);
-      // Fallback to legacy processing if LangGraph fails
+  // Get execution engine based on feature flags
+  const engine = getExecutionEngine(domain, reportTier, reportId);
+
+  try {
+    switch (engine) {
+      case 'multi-agent':
+        console.log(`[Worker] Using Multi-Agent system for ${domain} (${reportTier}) - Report ${reportId}`);
+        return await processReportWithMultiAgent(job);
+
+      case 'langgraph':
+        console.log(`[Worker] Using LangGraph for ${domain} (${reportTier}) - Report ${reportId}`);
+        return await processReportWithLangGraph(job);
+
+      case 'legacy':
+      default:
+        console.log(`[Worker] Using legacy processing for ${domain} (${reportTier}) - Report ${reportId}`);
+        return await processReportLegacy(job);
+    }
+  } catch (error) {
+    console.error(`[Worker] ${engine} processing failed for ${domain}, falling back to legacy:`, error);
+    // Fallback to legacy if anything fails
+    if (engine !== 'legacy') {
+      console.log(`[Worker] Attempting fallback to legacy processing...`);
       return await processReportLegacy(job);
     }
-  } else {
-    console.log(`[Worker] Using legacy processing for ${domain} (${reportTier}) - Report ${reportId}`);
-    return await processReportLegacy(job);
+    throw error; // Re-throw if legacy itself fails
   }
 }
 
