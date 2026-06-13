@@ -9,6 +9,9 @@ import {
   UserMinus,
   Mail,
   CheckCircle,
+  FileBarChart,
+  Download,
+  Bell,
   type LucideIcon,
 } from 'lucide-react';
 import { ActivityType } from '@/lib/db/schema';
@@ -25,6 +28,9 @@ const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.REMOVE_TEAM_MEMBER]: UserMinus,
   [ActivityType.INVITE_TEAM_MEMBER]: Mail,
   [ActivityType.ACCEPT_INVITATION]: CheckCircle,
+  [ActivityType.GENERATE_REPORT]: FileBarChart,
+  [ActivityType.DOWNLOAD_REPORT]: Download,
+  [ActivityType.SUBSCRIBE_DASHBOARD]: Bell,
 };
 
 function getRelativeTime(date: Date) {
@@ -63,6 +69,12 @@ function formatAction(action: ActivityType): string {
       return 'You invited a team member';
     case ActivityType.ACCEPT_INVITATION:
       return 'You accepted an invitation';
+    case ActivityType.GENERATE_REPORT:
+      return 'You generated a report';
+    case ActivityType.DOWNLOAD_REPORT:
+      return 'You downloaded a report';
+    case ActivityType.SUBSCRIBE_DASHBOARD:
+      return 'You subscribed to dashboard updates';
     default:
       return 'Unknown action occurred';
   }

@@ -3,11 +3,14 @@ import type { Metadata, Viewport } from 'next';
 import { Manrope } from 'next/font/google';
 import { getUser, getTeamForUser } from '@/lib/db/queries';
 import { SWRConfig } from 'swr';
+import { siteConfig } from '@/lib/config/site';
 
 export const metadata: Metadata = {
-  title: 'Website Growth Report SaaS',
-  description:
-    'Generate comprehensive AI-powered website analysis reports with Claude Code SDK, MCP tool integrations, and actionable growth recommendations. Supports 4 pricing tiers with advanced SEO, UX, and business insights.'
+  title: {
+    default: `${siteConfig.name} — ${siteConfig.tagline}`,
+    template: `%s · ${siteConfig.name}`
+  },
+  description: siteConfig.description
 };
 
 export const viewport: Viewport = {

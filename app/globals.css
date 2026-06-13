@@ -193,6 +193,16 @@
   --chart-4: hsl(43 74% 66%);
   --chart-5: hsl(27 87% 67%);
   --radius: 0.6rem;
+
+  /* Brand color — change these two stops to re-skin the entire app. */
+  --brand: hsl(24 95% 53%);
+  --brand-foreground: hsl(0 0% 100%);
+  --brand-50: hsl(33 100% 96%);
+  --brand-100: hsl(34 100% 92%);
+  --brand-600: hsl(21 90% 48%);
+  --brand-700: hsl(17 88% 40%);
+  --brand-gradient-from: hsl(24 95% 53%);
+  --brand-gradient-to: hsl(43 96% 56%);
 }
 
 /*
@@ -231,6 +241,12 @@
 */
 
 @theme inline {
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -271,5 +287,102 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/*
+  ---break---
+  Brand visual system: gradients, decorative backgrounds & animations.
+  Used by the marketing components in components/marketing/*.
+*/
+
+@layer utilities {
+  /* Reusable brand gradient text + fills */
+  .brand-gradient {
+    background-image: linear-gradient(
+      135deg,
+      var(--brand-gradient-from),
+      var(--brand-gradient-to)
+    );
+  }
+  .text-gradient {
+    background-image: linear-gradient(
+      135deg,
+      var(--brand-gradient-from),
+      var(--brand-gradient-to)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Soft radial glow used behind hero / CTA sections */
+  .bg-glow {
+    background-image: radial-gradient(
+      60% 60% at 50% 0%,
+      color-mix(in oklab, var(--brand) 18%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  /* Subtle dotted grid backdrop */
+  .bg-grid {
+    background-image: radial-gradient(
+      hsl(240 5% 50% / 0.12) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+  }
+
+  .shadow-brand {
+    box-shadow: 0 18px 40px -12px color-mix(in oklab, var(--brand) 45%, transparent);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-marquee,
+  .animate-float {
+    animation: none;
   }
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { use, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut } from 'lucide-react';
+import { Home, LogOut, Sparkles } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { User } from '@/lib/db/schema';
 import useSWR, { mutate } from 'swr';
 import { Footer } from '@/components/footer';
+import { siteConfig, mainNav } from '@/lib/config/site';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -33,14 +34,14 @@ function UserMenu() {
   if (!user) {
     return (
       <>
-        <Link
-          href="/pricing"
-          className="text-sm font-medium text-gray-700 hover:text-gray-900"
+        <Button asChild variant="ghost" className="hidden sm:inline-flex rounded-full">
+          <Link href="/sign-in">Sign In</Link>
+        </Button>
+        <Button
+          asChild
+          className="rounded-full bg-brand hover:bg-brand-600 text-brand-foreground"
         >
-          Pricing
-        </Link>
-        <Button asChild className="rounded-full">
-          <Link href="/sign-up">Sign Up</Link>
+          <Link href="/generate">Generate Report</Link>
         </Button>
       </>
     );
@@ -81,14 +82,31 @@ function UserMenu() {
 
 function Header() {
   return (
-    <header className="border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <Link href="/" className="flex items-center">
-          <CircleIcon className="h-6 w-6 text-orange-500" />
-          <span className="ml-2 text-xl font-semibold text-gray-900">ACME</span>
+    <header className="sticky top-0 z-50 border-b border-gray-200/80 bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+        <Link href="/" className="flex items-center gap-2 group">
+          <span className="grid size-8 place-items-center rounded-lg brand-gradient text-white shadow-sm transition-transform group-hover:scale-105">
+            <Sparkles className="size-4" />
+          </span>
+          <span className="text-lg font-bold tracking-tight text-gray-900">
+            {siteConfig.name}
+          </span>
         </Link>
-        <div className="flex items-center space-x-4">
-          <Suspense fallback={<div className="h-9" />}>
+
+        <nav className="hidden md:flex items-center gap-7">
+          {mainNav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <Suspense fallback={<div className="h-9 w-20" />}>
             <UserMenu />
           </Suspense>
         </div>

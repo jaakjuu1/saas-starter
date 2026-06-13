@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, AlertCircle, Download, RefreshCw, Zap, BarChart3, Target, Rocket } from 'lucide-react';
+import { CheckCircle, AlertCircle, Download, RefreshCw } from 'lucide-react';
+import { tierById, accentClasses } from '@/lib/config/site';
 
 interface ReportStatus {
   report: {
@@ -29,13 +30,6 @@ interface ReportStatus {
   } | null;
   queue?: any;
 }
-
-const reportTierInfo = {
-  lite: { name: 'Lite Report', icon: Zap, color: 'text-blue-600' },
-  pro: { name: 'Pro Report', icon: BarChart3, color: 'text-purple-600' },
-  elite: { name: 'Elite Report', icon: Target, color: 'text-orange-600' },
-  tasklist_pro: { name: 'Tasklist Pro', icon: Rocket, color: 'text-green-600' },
-};
 
 const getProgressMessage = (progress: number, status: string): string => {
   if (status === 'completed') return 'Report generation completed!';
@@ -127,8 +121,9 @@ export default function ReportStatusPage() {
   }
 
   const { report, job } = status;
-  const tierInfo = reportTierInfo[report.reportType as keyof typeof reportTierInfo];
+  const tierInfo = tierById(report.reportType) ?? tierById('pro')!;
   const Icon = tierInfo.icon;
+  const tierAccent = accentClasses[tierInfo.accent];
   
   const progress = job?.progress || 0;
   const isCompleted = report.status === 'completed';
@@ -153,7 +148,7 @@ export default function ReportStatusPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4`}>
-            <Icon className={`h-8 w-8 ${tierInfo.color}`} />
+            <Icon className={`h-8 w-8 ${tierAccent.text}`} />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {tierInfo.name}
